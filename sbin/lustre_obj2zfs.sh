@@ -48,8 +48,8 @@ usage () {
     echo "-i        Lustre ost index (l_ost_idx)" >&2
     echo "          (lfs getstripe --yaml -> l_ost_idx)" >&2
     echo "-o        Lustre object oid" >&2
-    echo "          (lfs getstripe --yaml -> l_fid ->  f_seq:f_oid:f_ver)
-                    oid = (f_seq & 0xffff) << 32 | f_oid" >&2
+    echo "          lfs getstripe --yaml -> l_fid ->  f_seq:f_oid:f_ver" >&2
+    echo "          oid = (f_seq & 0xffff) << 32 | f_oid" >&2
 }
 
 parse_input() {
