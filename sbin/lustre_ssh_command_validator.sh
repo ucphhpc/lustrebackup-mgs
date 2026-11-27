@@ -38,6 +38,7 @@ SNAPSHOT_UMOUNT_PATTERN="${SBIN_PATTERN}?lctl_snapshot_umount\.sh( .*)?"
 OBJ2ZFS_PATTERN="${SBIN_PATTERN}?lustre_obj2zfs\.sh( .*)?"
 ZFS_SNAPSHOT_BLOCKS_PATTERN="${SBIN_PATTERN}?lustre_zfs_snapshot_blocks\.sh( .*)?"
 ACTIVE_MDS_PATTERN="${SBIN_PATTERN}?lustre_active_mds\.sh( .*)?"
+OSP_PATTERN="${SBIN_PATTERN}?lustre_osp\.sh( .*)?"
 # echo "DEBUG: SSH_ORIGINAL_COMMAND: \"${SSH_ORIGINAL_COMMAND}\""
 
 # NOTE: RSYNC_PATTERN regex MUST be unquoted here
@@ -49,7 +50,8 @@ if [[ "${SSH_ORIGINAL_COMMAND}" =~ ^${MGS_STATUS_COMMAND}$ \
         || "${SSH_ORIGINAL_COMMAND}" =~ ^${SNAPSHOT_UMOUNT_PATTERN}$ \
         || "${SSH_ORIGINAL_COMMAND}" =~ ^${OBJ2ZFS_PATTERN}$ \
         || "${SSH_ORIGINAL_COMMAND}" =~ ^${ZFS_SNAPSHOT_BLOCKS_PATTERN}$ \
-        || "${SSH_ORIGINAL_COMMAND}" =~ ^${ACTIVE_MDS_PATTERN}$ ]]; then
+        || "${SSH_ORIGINAL_COMMAND}" =~ ^${ACTIVE_MDS_PATTERN}$ \
+        || "${SSH_ORIGINAL_COMMAND}" =~ ^${OSP_PATTERN}$ ]]; then
 
     # /usr/bin/logger -t lctl_ssh_command_validator -p auth.info "Run restricted command: ${SSH_ORIGINAL_COMMAND}"
     eval "${SSH_ORIGINAL_COMMAND}"

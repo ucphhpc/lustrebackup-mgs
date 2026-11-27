@@ -3,7 +3,7 @@
 #
 # --- BEGIN_HEADER ---
 #
-# lustre_active_mds - lustre check if mds is active
+# lustre_osp - lustre Object Storage Proxy
 # Copyright (C) 2020-2026  The lustrebackup-mgs Project by the Science HPC Center at UCPH
 #
 # This file is part of lustrebackup-mgs.
@@ -24,12 +24,9 @@
 #
 # -- END_HEADER ---
 #
-# -------------------------------------------------
-# Check if MDS is active for FS fsname-MDT
-# -------------------------------------------------
-# We check for the OSP (Object Storage Proxy) -> OST (Object storage targets)
-# which are needed by 'lustre_obj2zfs.sh'.
-# -------------------------------------------------
+# ------------------------------------------------------------
+# Get Object Storage Proxy (OSP) values for for FS fsname-MDT
+# -------------------------------------------------------------
 # NOTE:
 # The OSP (Object Storage Proxy) is the Lustre component
 # that lets a metadata target (MDT) talk to other storage targets. 
@@ -51,6 +48,9 @@
 
 declare -r __scriptname__="$0"
 declare __fsname__=""
+declare __mdt__=""
+declare __ostname__="OST*"
+declare __key__="*"
 
 usage () {
     # Usage help
@@ -58,18 +58,22 @@ usage () {
     echo "Where OPTIONS include:" >&2
     echo "-F        Lustre FS name" >&2
     echo "-M        Lustre MDT name" >&2
+    echo "-O        Lustre OST name (optional)" >&2
+    echo "-K        Lustre OSP key (optional)" >&2
 }
 
 parse_input() {
     # Parse command line options and arguments
     declare -i OPTIND
     # Parse commandline options
-    while getopts hF:M: opt; do
+    while getopts hF:M:O:K: opt; do
         case "$opt" in
             h)      usage
                     exit 0;;
             F)      __fsname__=$OPTARG;;
             M)      __mdt__=$OPTARG;;
+            O)      __ostname__=$OPTARG;;
+            K)      __key__=$OPTARG;;
             \?)     # unknown flag
                     usage
                     exit 1;;
@@ -80,6 +84,10 @@ parse_input() {
     __fsname__=${__fsname__//\'/}
     __mdt__=${__mdt__//\"/}
     __mdt__=${__mdt__//\'/}
+    __ostname__=${__ostname__//\"/}
+    __ostname__=${__ostname__//\'/}
+    __key__=${__key__//\"/}
+    __key__=${__key__//\'/}
 }
 
 
@@ -93,9 +101,9 @@ main() {
         usage
         return 1
     fi
-    echo "$__scriptname__: fsname=${__fsname__} mdt=${__mdt__}" >&2
+    echo "$__scriptname__: fsname=${__fsname__} mdt=${__mdt__} ostname=${__ostname__} key=${__key__}" >&2
 
-    cmd="lctl get_param 'osp.${__fsname__}-OST*-osc-${__mdt__}.active'"
+    cmd="lctl get_param 'osp.${__fsname__}-${__ostname__}-osc-${__mdt__}.${__key__}'"
     echo "$cmd" >&2
     eval "$cmd"
     ret=$?
