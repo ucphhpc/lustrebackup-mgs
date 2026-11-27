@@ -25,16 +25,17 @@
 # -- END_HEADER ---
 #
 
-# Resolve zfs object id from lustre f_seq and f_oid
-# f_seq and f_oid are obtained on the client using:
-# 'lfs getstripe filepath'
+# Resolve zfs object id from lustre object id (oid)
+# oid is obtained on the client using:
+# lfs getstripe --yaml -> l_fid -> f_seq:f_oid:f_ver ->
+# oid = (f_seq & 0xffff) << 32 | f_oid
 
 declare -r __scriptname__="$0"
 declare __fsname__=""
 declare __mdt__=""
 declare __snapname__=""
 declare __ost_idx__=""
-declare __f_oid__=""
+declare __oid__=""
 
 
 usage () {
@@ -46,8 +47,9 @@ usage () {
     echo "-S        Lustre snapshot name" >&2
     echo "-i        Lustre ost index (l_ost_idx)" >&2
     echo "          (lfs getstripe --yaml -> l_ost_idx)" >&2
-    echo "-o        Lustre file oid (f_oid)" >&2
-    echo "          (lfs getstripe --yaml -> l_fid ->  f_seq:f_oid:f_ver)" >&2
+    echo "-o        Lustre object oid" >&2
+    echo "          (lfs getstripe --yaml -> l_fid ->  f_seq:f_oid:f_ver)
+                    oid = (f_seq & 0xffff) << 32 | f_oid" >&2
 }
 
 parse_input() {
@@ -62,7 +64,7 @@ parse_input() {
             M)      __mdt__=$OPTARG;;
             S)      __snapname__=$OPTARG;;
             i)      __ost_idx__=$OPTARG;;
-            o)      __f_oid__=$OPTARG;;
+            o)      __oid__=$OPTARG;;
             \?)     # unknown flag
                     usage
                     exit 1;;
@@ -77,8 +79,8 @@ parse_input() {
     __snapname__=${__snapname__//\'/}
     __ost_idx__=${__ost_idx__//\"/}
     __ost_idx__=${__ost_idx__//\'/}
-    __f_oid__=${__f_oid__//\"/}
-    __f_oid__=${__f_oid__//\'/}
+    __oid__=${__oid__//\"/}
+    __oid__=${__oid__//\'/}
 }
 
 
@@ -203,11 +205,11 @@ main() {
     if [[ -z "$__fsname__" \
         || -z "$__mdt__" \
         || -z "$__ost_idx__" \
-        || -z "$__f_oid__" ]]; then
+        || -z "$__oid__" ]]; then
         usage
         return 1
     fi
-    echo "$__scriptname__: fsname=${__fsname__} mdt=${__mdt__} ost_idx=${__ost_idx__} oid=${__f_oid__}" >&2
+    echo "$__scriptname__: fsname=${__fsname__} mdt=${__mdt__} ost_idx=${__ost_idx__} oid=${__oid__}" >&2
 
     # Derive OST hex index and name from OST index
     ost_idx_hex=$(printf '%04x' "${__ost_idx__}")
@@ -249,7 +251,7 @@ main() {
 
     # Resolve ZFS object id from FID
     t1=$(date +%s%N)
-    fid_to_zfs_obj ${oss_ip} ${dataset} ${__f_oid__}
+    fid_to_zfs_obj ${oss_ip} ${dataset} ${__oid__}
     t2=$(date +%s%N)
     echo "fid_to_zfs_obj: $(((t2-t1)/1000000)) ms" >&2
 
